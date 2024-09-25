@@ -1,4 +1,6 @@
-# ReHeaT 2 (REference of the HEArt failure Transcriptome)
+# ReHeaT 2 
+(REference of the HEArt failure Transcriptome)
+
 Multicellular Transcriptional Landscape of Heart Failure
 
 Overview
