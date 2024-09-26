@@ -7,12 +7,11 @@ In particular we decomposed disease signatures to study the contribtution of cel
 
 
 ### Key Features
-HF patient map. Meta-analysis of single nuc data to identify shared multicellular programs
-Blueprint of HF. The identificiation of a network of cell-type dependencies behind the multicellular program.
-Integrative analysis with bulk. We map multicellular programs to bulk. 
-Cohort-Wide Analysis: Data from over 1,500 patients, accounting for clinical and technical heterogeneity.
-Consensus Disease Programs: Identification of convergent molecular pathways involved in HF, enabling more consistent interpretation of gene expression data across cohorts.
-Exploratory Platform: Our work is presented in a user-friendly platform for further exploration of the underlying molecular biology of heart failure.
+1. **HF patient map**. Meta-analysis of single nuc data to identify shared multicellular programs
+2. **Blueprint of HF**. The network of cell-type dependencies behind the multicellular program.
+3. **Fibroblast atlas**. Integrating fibroblasts on single cell level to identify cell states and study their division of labor to express the multi cellular program. 
+4. **Bulk integration**. We map multicellular programs to bulk and use insights form cell type marker deregulation to deconvolute cell type proportions. 
+5. **Study projection**. Using independent data sets to project them into the multicellular programs of heart failure and dissect shared deregulation events. 
 
 
 ### How to Explore the Data
