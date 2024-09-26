@@ -1,30 +1,25 @@
-# ReHeaT 2 
-(REference of the HEArt failure Transcriptome)
+# Multicellular Transcriptional Landscape of Heart Failure
+An integrative meta-analysis of the cardiac transcriptomie changes in heart failure. 
 
-Multicellular Transcriptional Landscape of Heart Failure
+### Overview
+We analyzed cardiac transcriptome changes captured in bulk and single nuc data from heart failure patients and performed an integrative analysis to identify shared multicellular programs that characterize the failing heart. 
+In particular we decomposed disease signatures to study the contribtution of cell type composition changes. 
 
-Overview
+
+### Key Features
+HF patient map. Meta-analysis of single nuc data to identify shared multicellular programs
+Blueprint of HF. The identificiation of a network of cell-type dependencies behind the multicellular program.
+Integrative analysis with bulk. We map multicellular programs to bulk. 
+Cohort-Wide Analysis: Data from over 1,500 patients, accounting for clinical and technical heterogeneity.
+Consensus Disease Programs: Identification of convergent molecular pathways involved in HF, enabling more consistent interpretation of gene expression data across cohorts.
+Exploratory Platform: Our work is presented in a user-friendly platform for further exploration of the underlying molecular biology of heart failure.
 
 
-Key Features
+### How to Explore the Data
+We provide a user friendly access to a gene query of the the multicellular program 1 associated with heart failure in [shiny.io/](https://saezlab.shinyapps.io/reheat2/). All processed data and models can be accessed in zenodo (DOI:)
 
-    Multicellular Gene Expression Mapping: Uniting single-cell and bulk transcriptomics to describe coordinated gene expression changes during HF.
-    Cohort-Wide Analysis: Data from over 1,500 patients, accounting for clinical and technical heterogeneity.
-    Consensus Disease Programs: Identification of convergent molecular pathways involved in HF, enabling more consistent interpretation of gene expression data across cohorts.
-    Exploratory Platform: Our work is presented in a user-friendly platform for further exploration of the underlying molecular biology of heart failure.
+### How to cite us
+Read more at Lanzer, Ramirez et. al, biorxiv, 2024 (doi). 
 
-Goals
-
-    To provide a systematic integration of transcriptomic datasets for understanding heart failure at a multicellular level.
-    To offer reproducible insights into gene regulation and expression patterns across a large number of patients.
-    To support the development of new hypotheses and potential therapeutic targets for heart failure.
-
-How to Explore the Data
-
-We provide access to the dataset, scripts, and visual tools to explore the molecular profiles of HF. Visit our [documentation](link to documentation) for detailed instructions on accessing and navigating the platform.
-Contributing
-
-We welcome contributions from the scientific community! Please see our [contribution guidelines](link to contribution guide) for how to get involved.
-License
 
 This project is licensed under the [MIT License](link to license).
