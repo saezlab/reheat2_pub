@@ -4,6 +4,7 @@ An integrative meta-analysis of the cardiac transcriptomie changes in heart fail
 ### Overview
 We analyzed cardiac transcriptome changes captured in bulk and single-nucleus data from heart failure patients and performed an integrative analysis to identify shared multicellular programs that characterize the failing heart. In particular, we decomposed disease signatures to study the contribution of cell type composition changes.
 
+<img src="https://www.dropbox.com/scl/fi/u8qafa0g3ohjax7ws93sp/readme_fig.png?rlkey=ypr7tnz425kc34dz3tgubsdny&raw=1" align="center" width="800">
 
 ### Key Features
 1. **HF patient map**. Meta-analysis of single-nucleus data to identify shared multicellular programs across patients.
