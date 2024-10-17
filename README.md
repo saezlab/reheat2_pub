@@ -16,7 +16,7 @@ We analyzed cardiac transcriptome changes captured in bulk and single-nucleus da
 
 
 ### How to Explore the Data
-We provide a user friendly access to a gene query of the the multicellular program 1 associated with heart failure in [shiny.io/](https://saezlab.shinyapps.io/reheat2/). All processed data and models can be accessed in zenodo (DOI:)
+We provide a user friendly access to a gene query of the the multicellular program 1 associated with heart failure in [shiny.io/](https://saezlab.shinyapps.io/reheat2/). All processed data and models can be accessed in zenodo (DOI:10.5281/zenodo.13946108)
 
 ### How to cite us
 Read more at Lanzer, Ramirez et. al, biorxiv, 2024 (doi). 
