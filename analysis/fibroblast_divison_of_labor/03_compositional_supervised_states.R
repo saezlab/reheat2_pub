@@ -20,6 +20,7 @@ library(ComplexHeatmap)
 library(lmerTest)
 
 source("aesthetics.R")
+source("make_source_data.R")
 
 hmp_plt <- "output/fib_sub_analysis/figures/sample_comps.pdf"
 tval_hmp_plt <- "output/fib_sub_analysis/figures/sample_comps_t.pdf"
@@ -276,6 +277,14 @@ fib_comp_changes<- ComplexHeatmap::Heatmap(
   show_row_dend = F
 )
 fib_comp_changes  
+
+#save source data
+stats2%>% 
+  as.data.frame()%>% 
+  rownames_to_column("study")%>%
+  save_source_data(T, 4, "C1", data= .)
+study_diff_stats_lmer %>%
+  save_source_data(T, 4, "C2", data= .)
 
 pdf("output/fib_sub_analysis/figures/sample_comps_t_w_lmm.pdf", 
     width= 2.8, height= 2.5)

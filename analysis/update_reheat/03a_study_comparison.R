@@ -190,14 +190,16 @@ up_ES = lapply(experiments, function(x){
   set.seed(1234)
   
   up_row = as_tibble(fgsea(pathways = study_deg_list_up,
-                           stats = stat_rank,nperm = 1000)) %>%
-    dplyr::select(pathway,ES)
+                           stats = stat_rank,nperm = 1000)) #%>%
+    #dplyr::select(pathway,ES)
 })
 
 up_ES = up_ES %>% 
-  enframe("Reference") %>% unnest()
+  enframe("Reference") %>%
+  unnest() %>% 
+  rename(DEG= pathway)
 
-colnames(up_ES) = c("Reference","DEG","ES")
+#colnames(up_ES) = c("Reference","DEG","ES")
 
 saveRDS(up_ES, 
         file = "output/reheat1/figure_objects/up_ES.rds")
@@ -213,14 +215,16 @@ down_ES = lapply(experiments, function(x){
   set.seed(1234)
   
   up_row = as_tibble(fgsea(pathways = study_deg_list_down,
-                           stats = stat_rank,nperm = 1000)) %>%
-    dplyr::select(pathway,ES)
+                           stats = stat_rank,nperm = 1000))# %>%
+  #  dplyr::select(pathway,ES)
 })
 
 down_ES = down_ES %>% 
-  enframe("Reference") %>% unnest()
+  enframe("Reference") %>% unnest() %>% 
+  rename(DEG= pathway)
 
-colnames(down_ES) = c("Reference","DEG","ES")
+
+#colnames(down_ES) = c("Reference","DEG","ES")
 
 saveRDS(down_ES, 
         file = "output/reheat1/figure_objects/down_ES.rds")

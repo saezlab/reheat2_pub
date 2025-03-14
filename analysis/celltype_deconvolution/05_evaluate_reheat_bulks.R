@@ -22,6 +22,7 @@ library(cowplot)
 library(ggrepel)
 library(cluster)
 library(lmerTest)
+source("make_source_data.R")
 source("celltype_deconvolution/utils_decon.R")
 source("aesthetics.R")
 
@@ -148,8 +149,8 @@ si %>%
 # run t-test per study of composition changes in HF -----------------------
 
 ## for each study we want to calculate a statistic for separating hf from nf
-study="Hua19"
-sig= "comp"
+# study="Hua19"
+# sig= "comp"
 
 t.test.res <-lapply(names(res), function(study){
   print(study)
@@ -226,11 +227,11 @@ map(unique(stats$signature_matrix_category), function(sig){
     pivot_wider(id_cols= -signature_matrix_category, 
                 names_from = cell_type, values_from= estimate)%>%
     as.data.frame() %>%
-    column_to_rownames("mix_name")%>%
+    column_to_rownameslibrary(ComplexHeatmap)("mix_name")%>%
     as.matrix()%>%
     Heatmap( name = sig)
 })
-library(ComplexHeatmap)
+
 
 
 # perform a linear mixed model to get a single change statistic --------------------------------------------
@@ -328,6 +329,11 @@ p.vals<-stats %>%
 
 
 study_diff_stats_lmer
+
+save_source_data(T, 5, "G2", data= study_diff_stats_lmer, 
+                 description = "results from the linear mixed model",
+                 row_names =F)
+
 color_fun <- function(estimates, p_vals) {
   ifelse(
     p_vals < 0.05,  # Check if p-value is less than 0.05
@@ -376,6 +382,13 @@ reheat1_comp_changes<- ComplexHeatmap::Heatmap(
   }
 )
 reheat1_comp_changes  
+
+#save source data
+stats2%>%
+  as.data.frame()%>%
+  rownames_to_column("study")%>%
+  save_source_data(T, 5, "G1", data= .,
+                 description = "Cell type compositon changes", row_names = F)
 
 pdf("output/figures/deconv_reheat_hmap_clusterd.pdf",
     width = 3.5, height= 4)
@@ -524,6 +537,13 @@ stacked_plt
 dev.off()
 
 
+#save source data
+
+sample_compositions2 %>%
+  left_join( target.df%>%
+               select(Sample, HeartFailure, study), 
+             by= join_by(sample_id == Sample)) %>%
+  save_source_data(data=., fig_type =T, 5, "F")
 
 
 # calculate silhouettes ---------------------------------------------------

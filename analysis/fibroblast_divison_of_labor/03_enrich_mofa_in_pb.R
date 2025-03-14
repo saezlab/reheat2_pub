@@ -157,6 +157,12 @@ pdf("output/figures/fibstates_R2_rawulm.pdf",
 p.raw.ulms
 dev.off()
 
+res2%>% 
+  filter(source %in% c("Factor1"))%>%
+  select(-X)%>%
+  mutate(source = str_replace_all(source, "Factor", "Fib_MCP"))%>%
+  save_source_data(T, 4, "E", data =.)
+
 plot_grid(p.raw.ulms,)
 
 # associate individual composition with over expression  ------------------

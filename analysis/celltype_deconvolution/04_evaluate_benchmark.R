@@ -22,6 +22,7 @@ library(circlize)
 
 source("celltype_deconvolution/utils_decon.R")
 source("aesthetics.R")
+source("make_source_data.R")
 color_list <- readRDS("color_list_figures.rds")
 
 
@@ -55,6 +56,7 @@ sc <- sc %>%
   mutate_all(~ ifelse(is.na(.), 0, .))
 
 mixtures_names <- str_replace_all(list.files("output/deconvo/mixtures_reheat", full.names = F),".txt", "")
+
 
 #meta data of mixtures
 #obs <- read.csv("data/metadata/combined_meta.csv")
@@ -258,8 +260,8 @@ my_comparisons <- list(c("unreg", "dereg_comp"),
 p.study_corr<- pat_cor_hf %>%
   ggplot(.,aes(x= signature_matrix_category, y= corr))+
   facet_grid(~heart_failure)+
-  geom_jitter()+
   geom_boxplot(alpha= 0.8, outlier.colour = NA)+
+  geom_jitter(width= 0.1)+
   theme_cowplot()+
   labs(x= "", 
        y= "Pearson's Correlation")+
@@ -270,16 +272,26 @@ p.study_corr<- pat_cor_hf %>%
 #  theme(axis.text.x = element_blank())+#(angle = 90,vjust= 0.5, hjust= 1))+
   geom_hline(yintercept = 1)+
   scale_y_continuous(breaks= c(0.4, 0.6, 0.8, 1))
+
 p.study_corr
+# save the soruce data
+save_source_data(T, 5, "E", data=pat_cor_hf)
+# get Ns from this
+pat_cor_hf%>%
+  ungroup()%>%
+  group_by(signature_matrix_category, heart_failure) %>%
+  count()
+
 # rmse plot 
+
 
 p.study_rmse<- patient_error_hf %>% 
   select(-sample_id,-disease_code)%>%
   distinct(signature_matrix_category, sample_rmse, heart_failure, core)%>%
   ggplot(.,aes(x= signature_matrix_category, y= sample_rmse))+
   facet_grid(~heart_failure)+
-  geom_jitter()+
   geom_boxplot(alpha= 0.8, outlier.color = NA)+
+  geom_jitter(width= 0.1)+
   theme_cowplot()+
   geom_hline(yintercept = 0)+
   labs(x= "", 
@@ -289,6 +301,11 @@ p.study_rmse<- patient_error_hf %>%
                     )+ # Add pairwise comparisons p-value
   theme(axis.text.x = element_text(angle = 90, vjust= 0.5, hjust= 1))
 p.study_rmse
+#save source data
+patient_error_hf %>% 
+  select(-sample_id,-disease_code)%>%
+  distinct(signature_matrix_category, sample_rmse, heart_failure, core)%>%
+  save_source_data(T, 5, "E2", data=.)
 
 p1= plot_grid(p.study_rmse,
           p.study_corr)

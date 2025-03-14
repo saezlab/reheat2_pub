@@ -209,10 +209,23 @@ pdf("output/figures/dol_genes_overview.pdf",
 p.r2
 dev.off()
 
+#save source data
+df.plot %>%
+  mutate(sign = ifelse(value>0, "Nonfailing", "Heart failure"))%>%
+  filter(abs(value)>0.1)%>%
+  save_source_data(T, 4, "F", .)
 ## add the expression plot to show case the labeled genes
-
-p.showcase_exp <- plot_exp(genes = c("CDK8", "FGF14", "COL24A1"), ncol = 2)
+genes = c("CDK8", "FGF14", "COL24A1")
+p.showcase_exp <- plot_exp(genes =genes, ncol = 2)
 p.showcase_exp
+
+#save source data
+pb_long %>% filter(feature %in% genes) %>% 
+  mutate(cell_state= paste0("Fib_", cell_state))%>%
+  ungroup()%>%
+  select(feature, value, sample_id, cell_state, heart_failure, batch)%>%
+  pivot_wider(names_from = cell_state, values_from = value)%>%
+  save_source_data(T, 1, "G", .)
 
 pdf("output/figures/fib_expression_showcase_dol.pdf", 
     width = 5, height = 4)

@@ -15,9 +15,11 @@ library(tidyverse)
 library(decoupleR)
 library(cowplot)
 
+source(save_source_data())
+
 g.load= read.csv("output/mofa/gene_loadings.csv")
 #meta= read.csv("output/mofa/metamodel_meta.csv")
-states <- read.csv("output/fib_sub_analysis/cluster_markers_processed.csv")
+states <- read.csv("../reheat2_cleaned_jan/data/fibroblasts/cluster_markers_processed.csv")
 col_list <- readRDS("color_list_figures.rds")
 
 # cell_state_marker_ORA ---------------------------------------------------
@@ -199,7 +201,18 @@ pdf("output/figures/fib_ES_vs_comp.pdf",
 p_mean_t_score_asso_fact1
 dev.off()
 
+##save source data
+
+df.j %>%
+  dplyr::filter(condition %in% c("Factor1"))%>%
+  mutate(condition= str_replace_all(condition, "Factor", "Fib_MCP"))%>%
+  group_by(cell_type, condition)%>% 
+  mutate(mean_tval_compositionchange= mean(statistic))%>%
+  distinct(cell_type, statistic, score, mean_tval_compositionchange)%>%
+  save_source_data(data= ., T, 4 , "D")
+
 #get correlations for paper 
+
 df.j%>% 
   dplyr::filter(condition %in% c("Factor1", "Factor2"))%>%
   group_by(cell_type, condition)%>% 

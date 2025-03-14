@@ -21,6 +21,11 @@ library(igraph)
 library(circlize)
 library(ComplexHeatmap)
 
+library(grid)  # Needed for text customization
+library(circlize)  # Needed for colorRamp2
+
+source("make_source_data.R")
+
 #results from running liana lr pairs w nn 
 df.nn <- readRDS("output/communication/nn_meta_mofa_fact_liana.rds")
 df.lr= readRDS("output/communication/lr_meta_mofa.rds")
@@ -135,6 +140,29 @@ pdf("output/figures/comm_correlations.pdf",
   p.corr.predictive.importances+coord_equal()
 dev.off()
 
+#save source data
+df.depend %>%
+  select(-NF, -lr_NF)%>%
+  save_source_data(T, fig_number = 3, 
+                   panel_letter = "F",
+                   data = ., 
+                   bottom_description = "HF, predictive importance in HF; lr_HF, number of lr pairs in HF" )
+
+df.depend %>%
+  select(-HF, -lr_HF)%>%
+  save_source_data(F, fig_number = 7, 
+                   panel_letter = "D",
+                   data = ., 
+                   bottom_description = "NF, predictive importance in NF; lr_NF, number of lr pairs in NF" )
+df.depend %>%
+  select(-lr_NF, -lr_HF)%>%
+  save_source_data(F, fig_number = 7, 
+                   panel_letter = "B",
+                   data = ., 
+                   bottom_description = "NF, predictive importance in NF; HF, predictive importance in HF" )
+
+
+######
 hist(df.depend$HF, breaks = 20)
 
 g1= graph_from_data_frame(df.depend%>% 
@@ -189,6 +217,77 @@ pdf("output/figures/comm_network.pdf",
 )
 draw(lgd, x = unit(11.4, "cm"), y = unit(12, "cm"), just = c("right", "top"))
 dev.off()
+
+df.depend%>% 
+  filter((HF)>0.2)%>%
+  select(predictor, 
+         target, 
+         HF)%>%
+  save_source_data(T, 3, "E", data= .)
+
+# revision update
+# add nf network 
+
+
+g1= graph_from_data_frame(df.depend%>% 
+                            filter((NF)>0.2)%>%
+                            select(predictor, 
+                                   target, 
+                                   NF),
+                          directed = T)
+#l = layout_in_circle(g1)
+l= layout_nicely(g1)
+
+col_fun = colorRamp2(c(min(E(g1)$NF), max(E(g1)$NF)),
+                     c(col_list$general_up_down_colors[[1]],
+                       col_list$general_up_down_colors[[2]] )
+)
+
+lgd = Legend(col_fun = col_fun, title = "predictive\nimportance")
+E(g1)$color<- col_fun(E(g1)$NF)
+
+pdf("output/figures/comm_network_NF.pdf",
+    width = 6, 
+    height= 6)
+plot(g1, 
+     layout= l,
+     main = "",
+     # === vertex
+     vertex.color = "lavender",#rgb(0.8,0.4,0.3,0.8),          # Node color
+     vertex.frame.color = "white",                 # Node border color
+     vertex.shape="circle",                        # One of “none”, “circle”, “square”, “csquare”, “rectangle” “crectangle”, “vrectangle”, “pie”, “raster”, or “sphere”
+     vertex.size=40,                               # Size of the node (default is 15)
+     vertex.size2=NA,                              # The second size of the node (e.g. for a rectangle)
+     
+     # === vertex label
+     #vertex.label= V(n)$name,                   # Character vector used to label the nodes
+     vertex.label.color="black",
+     vertex.label.family="Helvetica",                  # Font family of the label (e.g.“Times”, “Helvetica”)
+     vertex.label.font=2,                          # Font: 1 plain, 2 bold, 3, italic, 4 bold italic, 5 symbol
+     vertex.label.cex=1.3,                           # Font size (multiplication factor, device-dependent)
+     vertex.label.dist=0,                          # Distance between the label and the vertex
+     vertex.label.degree=0 ,                       # The position of the label in relation to the vertex (use pi)
+     
+     # === Edge
+     #edge.color = ifelse(E(g1)$n2 > 0, "red", "darkblue"),                         # Edge color
+     edge.width=10* abs(E(g1)$NF),                                 # Edge width, defaults to 1
+     #edge.width=E(g1)$w *10,                                 # Edge width, defaults to 1
+     edge.arrow.size=2.5* abs(E(g1)$NF),                            # Arrow size, defaults to 1
+     edge.arrow.width=1.15,
+     #edge.arrow.mode=1,
+     #edge.arrow.color= "black", # Arrow width, defaults to 1
+     edge.lty="solid",                             # Line type, could be 0 or “blank”, 1 or “solid”, 2 or “dashed”, 3 or “dotted”, 4 or “dotdash”, 5 or “longdash”, 6 or “twodash”
+     edge.curved=0.3                            # Edge curvature, range 0-1 (FALSE sets it to 0, TRUE to 0.5)
+)
+draw(lgd, x = unit(15, "cm"), y = unit(13, "cm"), just = c("right", "top"))
+dev.off()
+
+df.depend%>% 
+  filter((NF)>0.2)%>%
+  select(predictor, 
+         target, 
+         HF)%>%
+  save_source_data(F, 7, "A", data= .)
 
 # join  NN results with LR and identify top interactions ------------------
 
@@ -277,7 +376,7 @@ get_top_hits <- function(sender_oi ,receiver_oi){
          color= "n(cell types)\nexpressing\nligand")
   print(p)
   
-  return(df)
+  return(list("df" =df, "p"=p))
   
 }
 
@@ -345,7 +444,7 @@ plot_targets <- function(sender_oi ,receiver_oi, ligands_oi,
   list(p1, p2)
 }
 
-plot_targets("Fib", "Myeloid", ligands_oi = x %>% 
+plot_targets("Fib", "Myeloid", ligands_oi = x$df %>% 
                ungroup()%>%
                filter(n.cell==1)%>%
                slice_max(order_by = aupr_corrected, n = 10) %>%
@@ -353,7 +452,7 @@ plot_targets("Fib", "Myeloid", ligands_oi = x %>%
              )
 
 
-p.fib.cm.targets<- plot_targets("Fib", "CM", y %>% ungroup()%>%
+p.fib.cm.targets<- plot_targets("Fib", "CM", y$df %>% ungroup()%>%
                filter(n.cell==1)%>%
                slice_max(order_by = aupr_corrected, n = 10) %>%
                pull(source_genesymbol), -0.25)
@@ -371,3 +470,203 @@ pdf("output/figures/comm_nn_targets_cm_fib.pdf",
 p.fib.cm.targets
 dev.off()
 
+
+# revision update, address cell types targeting fibs -----------------------
+
+df.depend%>% 
+  filter(target =="Fib")%>%
+  select(predictor, 
+         target, 
+         NF, HF)%>%
+  pivot_longer(cols= c(NF, HF), names_to = "HF_status", values_to = "predictive_importance")%>%
+  ggplot(aes(x= reorder(predictor, predictive_importance), y= predictive_importance))+
+  geom_col(fill ="lavender", color="black", width = 0.4)+
+  theme_cowplot()+
+  #coord_flip()+
+  labs(y= "Predictive Importance", 
+       x= "") +
+  theme(plot.margin = margin(20, 20, 20, 20, "pt"), 
+        axis.text.x = element_text(angle= 90, hjust= 1, vjust= 0.5)) +
+  facet_grid(~HF_status)
+
+# we will look at possible ligands
+p1= get_top_hits("CM", "Fib")
+p1$p+ggtitle("CM to Fib ligands") 
+p2= get_top_hits("Myeloid", "Fib")
+
+
+p3= plot_grid(  p2$p+
+              ggtitle("Myeloid")+
+              theme(legend.position = "none"), 
+            p1$p+
+              ggtitle("CM"), 
+            rel_widths= c(1,1.4)
+          
+)
+
+pdf("output/figures/comm_ligands_to_fibs.pdf",
+    width= 8, height= 3.5)
+p3
+dev.off()
+# LR network MCP1 as a heatmap --------------------------------------------
+
+
+hmap1%>%
+  filter(LR=="POSTN_PTK7") %>%
+select(sender, receiver, LR, n_receiver, n_sender, group, n_group)
+
+LRs= df.comm %>%
+  #filter(abs(interact)>0.2) %>%
+  filter(Factor == "Factor1")%>%
+  #group_by(receiver) %>%
+  ungroup()%>%
+  slice_max(order_by = abs(interact), prop= 0.1)%>%
+  mutate(LR = paste(source_genesymbol, target_genesymbol, sep = "_"))%>%
+  pull(LR)
+length(LRs)
+sort(LRs)
+df.comm %>%
+  filter(abs(interact)>0.2) %>%
+  filter(Factor == "Factor1", 
+         sender=="Fib", receiver =="CM", source_genesymbol=="NRG1")
+hmap1 = df.comm %>%
+  filter(Factor == "Factor1") %>%
+  mutate(LR = paste(source_genesymbol, target_genesymbol, sep = "_")) %>%
+  filter(LR %in% LRs) %>%
+  distinct(sender, receiver, LR, group) %>%
+  group_by(sender, LR) %>%
+  mutate(n_sender = n()) %>%
+  group_by(LR, receiver) %>%
+  mutate(n_receiver = n()) %>%
+  group_by(LR, group) %>%
+  mutate(n_group = n()) %>%
+  ungroup()
+
+  # Prepare the data for heatmaps
+  hmap_data <- hmap1 %>%
+    select(sender, receiver, LR, n_receiver, n_sender) %>%
+    distinct() %>% arrange(LR, sender, receiver)
+  
+  # Convert to wide format for heatmaps
+  # Convert to wide format for heatmaps
+  matrix_sender <- hmap_data %>%
+    distinct(LR, sender, n_sender) %>%
+    pivot_wider(names_from = sender, values_from = n_sender, values_fill = 0) %>%
+    column_to_rownames("LR") %>%
+    as.matrix()
+  
+  matrix_receiver <- hmap_data %>%
+    distinct(LR, receiver, n_receiver) %>%
+    pivot_wider(names_from = receiver, values_from = n_receiver, values_fill = 0) %>%
+    column_to_rownames("LR") %>%
+    as.matrix()
+  
+  # Prepare stacked barplot data for n_group
+  barplot_data <- hmap1 %>%
+    distinct(LR, group, n_group) %>% arrange(LR)%>%
+    pivot_wider(names_from = group, values_from = n_group, values_fill = list(n_group = 0)) %>%
+    column_to_rownames("LR") %>%
+    #select(any_of(c("NF", "HF"))) %>%  # Ensure order
+    as.matrix()
+  
+  group_colors <- c("HF" = "black", "NF" = "grey")  # Adjust colors as needed
+  group_colors <- group_colors[colnames(barplot_data)]
+  
+  bar_legend <- Legend(
+    labels = names(group_colors),  # "Group1", "Group2"
+    legend_gp = gpar(fill = group_colors),  # Apply colors
+    title = "Group"
+  )
+  # Define barplot annotation (stacked)
+  bar_anno <- rowAnnotation(
+    "n° cell type\npairs" = anno_barplot(
+      barplot_data, 
+      beside = FALSE,  # Stacked bars
+      gp = gpar(fill = group_colors),
+      border = TRUE,
+      axis_param = list(side = "top",
+                        labels_rot = 0)  # Place axis on top for easier reading
+    )
+  )
+  
+  
+  
+  matrix_receiver = matrix_receiver[,sort(colnames(matrix_receiver))]
+  matrix_sender = matrix_sender[,sort(colnames(matrix_sender))]
+  # Custom color function ensuring 0 is grey
+  color_function_sender <- colorRamp2(c(0, 1, max(matrix_sender, na.rm = TRUE)), c("grey", "white", "blue"))
+  color_function_receiver <- colorRamp2(c(0, 1, max(matrix_receiver, na.rm = TRUE)), c("grey", "white", "red"))
+  
+  # Function to display values inside cells, skipping 0s
+  cell_text_fun_sender <- function(j, i, x, y, width, height, fill) {
+    value <- matrix_sender[i, j]
+    if (!is.na(value) && value != 0) {  # Do not print zero values
+      grid.text(value, x, y, gp = gpar(fontsize = 8, col = "black"))
+    }
+  }
+  
+  cell_text_fun_receiver <- function(j, i, x, y, width, height, fill) {
+    value <- matrix_receiver[i, j]
+    if (!is.na(value) && value != 0) {  # Do not print zero values
+      grid.text(value, x, y, gp = gpar(fontsize = 8, col = "black"))
+    }
+  }
+  
+  # Define heatmaps
+  heatmap_sender <- Heatmap(matrix_sender, 
+                            name = "n_sender",
+                            col = color_function_sender,
+                            cell_fun = cell_text_fun_sender,
+                            #col = colorRampPalette(c("white", "blue"))(50),
+                            cluster_rows = FALSE, 
+                            cluster_columns = FALSE,
+                            show_row_names = TRUE, 
+                            show_column_names = TRUE,
+                            row_names_side = "left",
+                            row_names_gp = gpar(fontsize = 8),
+                            show_row_dend = F, 
+                            show_column_dend = F,
+                             show_heatmap_legend = FALSE )
+  heatmap_sender
+  heatmap_receiver <- Heatmap(matrix_receiver, 
+                              name = "n_receiver",
+                              #col = colorRampPalette(c("white", "red"))(50),
+                              col = color_function_receiver,
+                              cell_fun = cell_text_fun_receiver,
+                              cluster_rows = FALSE, 
+                              cluster_columns = FALSE,
+                              show_row_names = FALSE,  # Avoid duplication
+                              show_column_names = TRUE,
+                              show_column_dend = F,
+                              show_heatmap_legend = FALSE )
+  
+  # Draw heatmaps next to each other
+  draw(heatmap_sender + heatmap_receiver + bar_anno , 
+       heatmap_legend_side = "bottom",
+       annotation_legend_list = list(bar_legend))
+  
+pdf("output/figures/comm_lr_network.pdf", height= 10.4, 
+    width= 5)
+  draw(heatmap_sender + heatmap_receiver + bar_anno , 
+     heatmap_legend_side = "bottom",
+     annotation_legend_list = list(bar_legend))
+dev.off()
+
+## target validation
+target.genes.oi <- g.loads%>% 
+  filter(Factor=="Factor1",
+         ctype == "CM",
+         (value) < -0.1)%>% 
+  pull(feature)
+df.nn%>%
+  filter(sender == "Fib" & receiver =="CM",
+         test_ligand %in% c("MXRA5", "BMP4", "NRG1"))%>%
+  View()
+df.nn%>%
+  filter(sender == "Fib" & receiver =="CM",
+         test_ligand %in% c("MXRA5", "BMP4", "NRG1"))%>%
+  filter(target %in% target.genes.oi)%>%
+  distinct(test_ligand, target, weight)%>%
+  group_by(test_ligand)%>% arrange(test_ligand, -weight)%>%
+  write_csv("output/communication/identifying_ligand_targets.csv")
+  

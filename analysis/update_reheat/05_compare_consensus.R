@@ -20,12 +20,20 @@ meta2023= read.csv("output/reheat1/meta_analysis_summary.txt", sep = '\t')%>% as
 
 directed_signature = readRDS("app_data/signature.rds")
 
-
+label_genes= c("NPPA", "MYH6","FNDC1", "COL1A1", "NOS3")
 ## compare pval distribution
 p.ranks= rbind(meta2021 %>% mutate(v = "v2021"), 
       meta2023 %>% mutate(v= "v2024"))%>%
-  ggplot(., aes(y= -log10(fisher_pvalue), x= rank, color= v))+
+  mutate(gene2= as.character(gene),
+    label = ifelse(gene2 %in% label_genes & v =="v2024", gene2, "") )%>%
+  ggplot(., aes(y= -log10(fisher_pvalue), x= rank, color= v, label =label))+
   geom_point()+
+  ggrepel::geom_text_repel(max.overlaps = 5000,
+                           color="black",
+                           size= 3, 
+                           force_pull = 1,nudge_x = 10,
+                           min.segment.length = 0.1,
+                           show.legend = F)+
   geom_vline(xintercept = 500,lty= 2)+
   geom_hline(yintercept = -log10(10^-5), lty= 2)+
   theme_cowplot()+
@@ -33,6 +41,7 @@ p.ranks= rbind(meta2021 %>% mutate(v = "v2021"),
   scale_color_manual(values=c("grey", "#CD5C5C" ))+
   labs(x= "Consenus gene ranking")
 p.ranks
+
 
 pdf("output/reheat1/fisher_rank.pdf",
     width= 6, 

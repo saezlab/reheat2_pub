@@ -25,7 +25,7 @@ library("r2glmm")
 library(ggrepel)
 library(rstatix)
 library(msigdbr)
-
+source("make_source_data.R")
 # data -------------------------------------------------------------------
 #read.csv("data/metadata/Reichart2022_DCM_RVsamples.csv")
 obs <- read.csv("output/fib_sub_analysis/all_state_coldata_sub_reg.csv")
@@ -62,6 +62,11 @@ pb_target <- pb %>% lapply(., function(x){
   
 })%>% do.call(rbind, .)%>%
   mutate(cell_state= factor(paste0("Fib_", cell_state)))
+
+pb_target%>% 
+  filter(sample_state %in% colnames(mat))%>%
+  group_by(cell_state, heart_failure)%>%
+  count()
 
 #1 get exp matrices per study (different feature space for each study)
 list.mats <- pb %>% lapply(., function(x){
@@ -202,8 +207,7 @@ df<- rbind(df.h, df.n, df.prog, df.cytos) %>%
   mutate(p_adj= p.adjust(p_value))%>%
   filter(source %in% x)
 
-plot_hmap<-function(df){
-  
+prepare_df <- function(df){
   mat2<- df%>%
     #mutate(star= ifelse(p_value<0.05 & t_value>0 , "*", ""))%>%
     select(cell_state, source, p_adj)%>%
@@ -220,6 +224,15 @@ plot_hmap<-function(df){
     as.data.frame() %>% 
     column_to_rownames("cell_state")%>% 
     scale()
+  
+  return(list(mat2, X))
+}
+
+plot_hmap<-function(input){
+  
+  X= input[[2]]
+  mat2= input[[1]]
+  
   
   hmap.pways<-Heatmap(X, border_gp = gpar(col = "black", lty = 1),
                       rect_gp = gpar(col = "white", lwd = 1), 
@@ -245,12 +258,16 @@ plot_hmap<-function(df){
   print(hmap.pways)
 }
 
-p.hmap_selected<-plot_hmap(df)
+
+p.hmap_selected<-plot_hmap(prepare_df(df))
 p.hmap_selected
 pdf("output/figures/fibstates_selected_pways.pdf", 
     width= 5, height= 3.5)
 p.hmap_selected
 dev.off()
+
+#save source data
+save_source_data(data= df, fig_type = T,4, "B")
 
 
 map(list(df.h, df.n, df.prog, df.cytos), plot_hmap)

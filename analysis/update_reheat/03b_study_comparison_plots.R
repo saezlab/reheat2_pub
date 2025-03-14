@@ -8,6 +8,9 @@
 
 library(tidyverse)
 library(cowplot)
+
+source("make_source_data.R")
+
 METAheart = readRDS(file = "output/reheat1/METAheart2023.rds") #main object
 # names(METAheart)<- str_replace_all(names(METAheart), "2019", "19")
 # saveRDS(METAheart, "output/reheat1/METAheart2023.rds")
@@ -15,8 +18,8 @@ experiments = names(METAheart)
 names(experiments) = experiments
 
 new_study_ids= c("Forte22", "Flam19", "Wang22", "Rao21", "Hua19")
-study_order <- c(old_study_ids, new_study_ids)
 old_study_ids <- as.character(experiments[!experiments %in% new_study_ids])
+study_order <- c(old_study_ids, new_study_ids)
 a <- c(rep("black", length(old_study_ids)), rep("orange4", length(new_study_ids)))
 
 # For labeling
@@ -103,7 +106,14 @@ pdf("output/reheat1/pariwise_AUC_hmap.pdf",
 pairwise_plot_200
 
 dev.off()
+#save sourcedata
 
+pairwise_200 %>% 
+  rename(AUROC = single) %>% 
+  save_source_data(fig_type = T, 
+                   fig_number = 2, 
+                    panel_letter = "B", 
+                   data =  ., description = NULL)
 #3. ES plots
 
 pcolors_up = RColorBrewer::brewer.pal(9, 'Reds')[1:7]
@@ -113,13 +123,18 @@ pcolors = c(pcolors_down,pcolors_up)
 #upregulation
 up_ES = readRDS(file = "output/reheat1//figure_objects/up_ES.rds")
 
-up_ES_plot = up_ES %>% ggplot(aes(x=factor(Reference,
-                                           levels = rev(study_order)),
-                                  y=factor(DEG,
-                                           levels = study_order)
-                                  ,fill = ES)) + geom_tile(color="darkgrey") +
-  theme_minimal() + xlab("Reference") +
+up_ES_plot = up_ES %>%
+  mutate(sig= ifelse(padj < 0.05, "*", ""), 
+         sig = ifelse(Reference==DEG, "" , sig))%>%
+  ggplot(aes(x=factor(Reference, levels = rev(study_order)),
+             y=factor(DEG, levels = study_order),
+             fill = ES,
+             label= sig)) + 
+  geom_tile(color="white") +
+  theme_minimal() + 
+  xlab("Reference") +
   ylab("Individual DEG") +
+  geom_text(hjust = 0.5, vjust = 0.7, size = 4) +
   theme(#axis.text.x = element_text(angle = 90, hjust = 1),
         axis.text = element_text(size=10),
         axis.title = element_text(size=12),
@@ -128,7 +143,8 @@ up_ES_plot = up_ES %>% ggplot(aes(x=factor(Reference,
         axis.text.x = element_text(angle = 90, hjust = 1, colour = a),
         axis.text.y = element_text(colour = rev(a))) +
   scale_fill_gradientn(colours= pcolors, limits=c(-1, 1)) + 
-  coord_flip() + ggtitle("Upregulated genes")
+  coord_flip() + 
+  ggtitle("Upregulated genes")
 
 up_ES_plot = up_ES_plot + theme(legend.position = "none")
 
@@ -136,14 +152,17 @@ up_ES_plot = up_ES_plot + theme(legend.position = "none")
 
 down_ES = readRDS(file = "output/reheat1//figure_objects/down_ES.rds")
 
-down_ES_plot = down_ES %>% ggplot(aes(x=factor(Reference,
-                                               levels = rev(study_order)),
-                                      y=factor(DEG,
-                                               levels = study_order),
-                                          
-                                  fill = ES)) + geom_tile(color="darkgrey") +
-  theme_minimal() + xlab("Reference") +
+down_ES_plot = down_ES %>% mutate(sig= ifelse(padj < 0.05, "*", ""), 
+                                  sig = ifelse(Reference==DEG, "" , sig))%>%
+  ggplot(aes(x=factor(Reference, levels = rev(study_order)),
+             y=factor(DEG, levels = study_order),
+             fill = ES,
+             label= sig)) + 
+  geom_tile(color="white") +
+  theme_minimal() + 
+  xlab("Reference") +
   ylab("Individual DEG") +
+  geom_text(hjust = 0.5, vjust = 0.7, size = 4) +
   theme(#axis.text.x = element_text(angle = 90, hjust = 1),
     axis.text = element_text(size=10),
     axis.title = element_text(size=12),
@@ -151,14 +170,15 @@ down_ES_plot = down_ES %>% ggplot(aes(x=factor(Reference,
     legend.text = element_text(size = 9),
     axis.text.x = element_text(angle = 90, hjust = 1, colour = a),
     axis.text.y = element_text(colour = rev(a))) +
-  scale_fill_gradientn(colours= pcolors, limits=c(-1, 1)) + 
+  #scale_fill_gradientn(colours= pcolors, limits=c(-1, 1)) + 
+  coord_flip() + 
   coord_flip() + ggtitle("Downregulated genes")
 
 
 es_legend = get_legend(down_ES_plot)
 
 down_ES_plot = down_ES_plot + theme(legend.position = "none")
-
+down_ES_plot
 
 # Align all plots
 
