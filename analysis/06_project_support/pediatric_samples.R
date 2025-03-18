@@ -102,7 +102,7 @@ assoc_model <- function(MOFAcell_obj) {
       dplyr::filter(Factor %in% c(fact)) %>%
       ggplot(aes(x = group, y = Score, fill = group)) +
       geom_boxplot() +
-      #geom_point(size = 3, alpha = 0.8) +
+      geom_point(size = 2, alpha = 0.8) +
       theme_bw() +
       theme(axis.text = element_text(size =12),
             axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
@@ -171,4 +171,6 @@ out_test <- test_projection[,c("Factor1", "Factor2")] %>%
   left_join(meta_data, by = c("sample_id"= "sample"))
 
 write_csv(out_test, factor_coords)
+
+write_csv(out_test[,-3], "./Revision/figures/Figure6/Figure6C.csv")
 

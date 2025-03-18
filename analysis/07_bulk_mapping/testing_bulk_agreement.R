@@ -248,3 +248,41 @@ bind_rows(sillohuette_res) %>%
   group_by(factor_name) %>%
   summarize(median(sil_width))
 
+# Make source data
+# AUROC
+
+F1_performance <- bulk_mats$Factor1$AUPRCs %>%
+  as.data.frame() %>%
+  rownames_to_column("bulk_study") %>%
+  pivot_longer(-bulk_study, names_to = "cell_type", values_to = "Factor1_AUROC")
+
+F2_performance <- bulk_mats$Factor2$AUPRCs %>%
+  as.data.frame() %>%
+  rownames_to_column("bulk_study") %>%
+  pivot_longer(-bulk_study, names_to = "cell_type", values_to = "Factor2_AUROC")
+
+left_join(F1_performance, F2_performance, by = c("bulk_study", "cell_type")) %>%
+  write_csv("./Revision/figures/Figure5/Figure5A_up.csv")
+
+
+#
+F1_ES <- bulk_mats$Factor1$ct_score %>%
+  as.data.frame() %>%
+  rownames_to_column("bulk_sample") %>%
+  pivot_longer(-bulk_sample,
+               names_to = "cell_type",
+               values_to = "Factor1_ES")
+
+F2_ES <- bulk_mats$Factor2$ct_score %>%
+  as.data.frame() %>%
+  rownames_to_column("bulk_sample") %>%
+  pivot_longer(-bulk_sample,
+               names_to = "cell_type",
+               values_to = "Factor2_ES")
+
+left_join(F1_ES,F2_ES, by =c("bulk_sample", "cell_type")) %>%
+  left_join(bulk_mats$Factor2$sample_info %>%
+              as.data.frame() %>%
+              rownames_to_column("bulk_sample")) %>%
+write_csv("./Revision/figures/Figure5/Figure5A_down.csv")
+

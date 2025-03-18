@@ -137,7 +137,8 @@ plt_df %>%
 
 
 
-
+plt_df %>%
+  write_csv("./Revision/figures/Figure2/Figure2F.csv")
 
 
 

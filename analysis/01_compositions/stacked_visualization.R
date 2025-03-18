@@ -82,3 +82,10 @@ pdf("results/compositions/stacked_comps.pdf", height = 6, width = 6)
 plot(stacked_plt)
 dev.off()
 
+# Source
+
+read_csv("./results/compositions/sample_comps.csv") %>%
+  left_join(all_meta, by = "sample_id") %>%
+  write_csv("./Revision/figures/Figure2/Figure2D.csv")
+
+

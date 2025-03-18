@@ -12,7 +12,7 @@ library(cluster)
 library(circlize)
 
 
-setwd("/Users/ricardoramirez/Dropbox/PostDoc/Research/ReHeaT2/")
+#setwd("/Users/ricardoramirez/Dropbox/PostDoc/Research/ReHeaT2/")
 hmp_plt <- "./results/compositions/sample_comps.pdf"
 si_plt_file <- "./results/compositions/si_scores.pdf"
 meta_file <- "./results/compositions/comps_meta.csv"
@@ -135,6 +135,9 @@ si %>%
   group_by(var_name) %>%
   summarize(median(sil_width))
 
+si %>%
+  group_by(covar) %>%
+  summarize(median(sil_width))
 
 # Testing differences in HF
 prop_data_clr <- prop_data %>%
@@ -328,3 +331,14 @@ study_var <- read_csv(lmer_file) %>%
 pdf(lmer_plt, height = 3, width = 3.3)
 plot(study_var)
 dev.off()
+
+
+read_csv("./results/compositions/t_res.csv") %>%
+  write_csv("./Revision/figures/Figure2/Figure2E_right.csv")
+
+read_csv("./results/compositions/lmer_res.csv") %>%
+  dplyr::select(cell_type, Estimate) %>%
+  dplyr::mutate(test = "linear mixed model") %>%
+  write_csv("./Revision/figures/Figure2/Figure2E_left.csv")
+
+

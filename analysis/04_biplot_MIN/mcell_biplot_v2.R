@@ -3,7 +3,7 @@
 library(tidyverse)
 library(cowplot)
 library(ComplexHeatmap)
-library(biclust)
+#library(biclust)
 source("./code/reheat2_pilot/aesthetics.R")
 
 # This generates the coordinates of all enriched terms
@@ -147,6 +147,16 @@ single_cell_plt <- all_single_cell %>%
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
   scale_color_manual(values = col_pub$ctype_colors)
+
+source_ct <- all_single_cell %>%
+  dplyr::filter(gset %in% gsets_scell) %>%
+  dplyr::mutate(top_val = ifelse(abs(F1_coord) > abs(F2_coord),
+                                 abs(F1_coord), abs(F2_coord))) %>%
+  dplyr::filter(top_val >= 0.1) %>%
+  dplyr::mutate(gset = sub("^[^_]*_", "", gset)) %>%
+  dplyr::mutate(gset = gsub("_", " ", gset) %>%
+                  tolower() %>%
+                  stringr::str_to_title())
 
 pdf("./results/MCP_characs/ct_biplot.pdf", height = 5.3, width = 6.5)
 plot(single_cell_plt)
@@ -305,4 +315,15 @@ all_bis <- cowplot::plot_grid(single_cell_plt, single_multicell_plt,
 pdf("./results/MCP_characs/all_biplots.pdf", height = 5, width = 13)
 plot(all_bis)
 dev.off()
+
+source_mcell <-  all_multi_cell %>%
+  dplyr::filter(gset %in% gsets_mcell) %>%
+  dplyr::mutate(gset = sub("^[^_]*_", "", gset)) %>%
+  dplyr::mutate(gset = gsub("_", " ", gset) %>%
+                  tolower() %>%
+                  stringr::str_to_title()) %>%
+  dplyr::mutate(ct = "multicell")
+
+bind_rows(source_ct, source_mcell) %>%
+  write_csv("./Revision/figures/Figure3/Figure3D.csv")
 

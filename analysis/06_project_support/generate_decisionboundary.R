@@ -104,6 +104,9 @@ external_woref <- bind_rows(Sarcoidosis_coords, HCM_coords) %>%
 
 external <- bind_rows(external_wref, external_woref)
 
+external %>%
+  write_csv("./Revision/figures/Figure6/Figure6B.csv")
+
 # Plotting
 
 lim_val <- max(abs(external$Factor2))
@@ -138,7 +141,7 @@ plot(projection_plts)
 dev.off()
 
 
-
+ggplot_build(projection_plts)
 # Misclassification test
 
 external_noref <- bind_rows(Sarcoidosis_coords, HCM_coords)
@@ -154,6 +157,6 @@ external <- external_noref %>%
 CER <- 1 - sum(external$HF_true == external$disease_code_resp)/nrow(external)
 
 
-
+meta_factors
 
 

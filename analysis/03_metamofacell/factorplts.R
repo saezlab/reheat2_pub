@@ -256,3 +256,14 @@ pdf("./results/meta_mofacell/celltype_R2_hmap.pdf", height = 1.5, width = 3)
 draw(expr_mats[[1]] + expr_mats[[2]])
 draw(expr_mats[[3]] + expr_mats[[4]])
 dev.off()
+
+
+# Source data
+
+MOFAcellulaR::get_tidy_factors(model = model,
+                               factor = "all",
+                               metadata = all_meta,
+                               group = T,
+                               sample_id_column = "sample_id") %>%
+  dplyr::filter(Factor %in% c("Factor1", "Factor2")) %>%
+  write_csv("./Revision/figures/Figure3/Figure3B.csv")

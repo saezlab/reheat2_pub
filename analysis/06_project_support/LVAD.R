@@ -158,6 +158,16 @@ pdf(factor_bplots, width = 3.5, height = 2.5)
 plot(bplot)
 dev.off()
 
+# Generating source
+
+test_projection[, "Factor1", drop = F] %>%
+  as.data.frame() %>%
+  rownames_to_column("sample_id") %>%
+  left_join(meta_data, by = "sample_id") %>%
+  dplyr::filter(heart_failure == "HF") %>%
+  dplyr::mutate(biopsy = factor(biopsy, levels = c("pre", "post"))) %>%
+  write_csv("./Revision/figures/Figure6/Figure6E.csv")
+
 # Distribution across factors
 
 fplot <- test_projection %>%

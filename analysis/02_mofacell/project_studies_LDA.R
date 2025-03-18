@@ -329,11 +329,23 @@ study_pred %>%
 
 
 
+sample_projection_dat %>%
+  unnest(c(UMAP_dat)) %>%
+  mutate(type_sample = ifelse(train_study == study, "original", "projected")) %>%
+  dplyr::mutate(train_study = strsplit(train_study,"_"))  %>%
+                  write_csv("./Revision/figures/Figure2/Figure2G.csv")
 
 
 
 
-
-
+study_pred %>%
+  dplyr::filter(cell_type == "All",
+                train_study != "Reichart2022_DCM",
+                test_study != "Reichart2022_DCM") %>%
+  dplyr::mutate(train_study = strsplit(train_study,"_") %>%
+                  map_chr(., ~.x[[1]])) %>%
+  dplyr::mutate(test_study = strsplit(test_study,"_") %>%
+                  map_chr(., ~.x[[1]])) %>%
+  write_csv("./Revision/figures/Figure2/Figure2H.csv")
 
 

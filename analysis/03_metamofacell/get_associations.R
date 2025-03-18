@@ -254,7 +254,7 @@ write_csv(model_stats, model_stats_file)
 model_stats_plt <- model_stats %>%
   ggplot(aes(x = study, y = R2)) +
   geom_boxplot() +
-  facet_wrap(covar ~ ., nrow = 2) +
+  facet_wrap(covar ~ ., nrow = 1) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 

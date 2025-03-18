@@ -5,7 +5,7 @@ library(ComplexHeatmap)
 
 
 # Main ---------------------------------------------------------------
-setwd("/Users/ricardoramirez/Dropbox/PostDoc/Research/ReHeaT2/")
+#setwd("/Users/ricardoramirez/Dropbox/PostDoc/Research/ReHeaT2/")
 # Aesthetics - colors for plotting
 source("./code/reheat2_pilot/aesthetics.R")
 
@@ -166,6 +166,12 @@ for(Fact in c("Factor1","Factor2")) {
     dplyr::mutate(feature = strsplit(feature,"_") %>%
                     map_chr(., ~ .x[[2]]),
                   colname = paste0(heart_failure, study))
+
+  if(Fact == "Factor1") {
+
+    write_csv(ex_genes, "./Revision/figures/Figure3/Figure3C.csv")
+
+  }
 
   cts <- ex_genes$view %>% unique() %>% set_names()
 

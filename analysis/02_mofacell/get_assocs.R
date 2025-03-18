@@ -10,7 +10,7 @@ library(cowplot)
 source("./code/reheat2_pilot/aesthetics.R")
 
 # Main ---------------------------------------------------------------
-setwd("/Users/ricardoramirez/Dropbox/PostDoc/Research/ReHeaT2/")
+setwd("/Users/flores/Dropbox/PostDoc/Research/ReHeaT2/")
 model_stats_plt_file <- "./results/models/model_stats_covars.pdf"
 model_stats_file <- "./results/models/model_stats_covars.csv"
 hf_model_stats_plt_file <- "./results/models/model_stats_covars_hf.pdf"
@@ -251,11 +251,11 @@ write_csv(model_stats, model_stats_file)
 model_stats_plt <- model_stats %>%
   ggplot(aes(x = study, y = R2)) +
   geom_boxplot() +
-  facet_wrap(covar ~ ., nrow = 2) +
+  facet_wrap(covar ~ ., nrow = 1) +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-pdf(model_stats_plt_file, height = 3.3, width = 2.7)
+pdf(model_stats_plt_file, height = 2.9, width = 4.3)
 
 plot(model_stats_plt)
 

@@ -38,7 +38,7 @@ ggplot(., aes(x = NF, y = HF, color = target, label = label)) +
   xlim(-0.7, 0.7) +
   ylim(-0.7, 0.7)
 
-cor.test(MCP1_net$NF, MCP1_net$HF)
+cor.test(MCP1_net$NF, MCP1_net$HF, method = "spearman")
 
 MCP1_cortest <- MCP1_net %>%
   group_by(target) %>%
@@ -54,6 +54,8 @@ MCP1_cortest <- MCP1_net %>%
   ungroup() %>%
   dplyr::mutate(padj = p.adjust(p.value, "BH")) %>%
   dplyr::arrange(padj, desc(estimate))
+
+t.test(MCP1_net$HF,MCP1_net$NF,paired = T, "greater")
 
 MCP1_net %>%
   dplyr::filter(target == "CM") %>%
