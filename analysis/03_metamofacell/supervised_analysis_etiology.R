@@ -33,12 +33,6 @@ all_mrks <- read_csv("./results/consensus_markers.csv", show_col_types = F) %>%
   deframe()
 
 # Generating pb
-
-file = "./data/pbulk/Chaffin2022_DCM_pbulk.csv"
-study = "Chaffin2022_DCM"
-coldata_file = "./data/coldata/Chaffin2022_DCM_coldata.csv"
-metadata_file = "./data/metadata_ext/Chaffin2022_DCM_metadata.csv"
-
 # All meta-data
 all_pbs <- pmap(input_df, function(file, study, coldata_file, metadata_file) {
 
