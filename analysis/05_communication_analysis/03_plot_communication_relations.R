@@ -28,10 +28,35 @@ source("make_source_data.R")
 
 #results from running liana lr pairs w nn 
 df.nn <- readRDS("output/communication/nn_meta_mofa_fact_liana.rds")
+
 df.lr= readRDS("output/communication/lr_meta_mofa.rds")
+
+df.lr %>% 
+  filter(Factor =="Factor1")%>% select(sender, receiver, group, source_genesymbol)
+#save filtered version for shiny app
+# df.nn%>% 
+#   filter( Factor=="Factor1")%>%
+#   select(sender, receiver, aupr_corrected, test_ligand,target, weight, group)%>%
+#   left_join(g.loads%>% filter(Factor=="Factor1"), 
+#             by = c("sender" = "ctype", "target" = "feature"))%>%
+#   saveRDS("output/communication/nn_target_weights_mcp1.rds")
+#         
+
+
 g.loads= read_csv("output/mofa/gene_loadings.csv")
 df.depend <- read.csv("output/communication/info_comms_net_MCP1.csv")
 
+ df.nn %>%
+  filter(Factor == "Factor1") %>%
+  mutate(group =ifelse(group =="hf", "HF", "NF")) %>%
+  select(sender, receiver, aupr_corrected, test_ligand, target, weight, group) %>%
+  left_join(g.loads %>% filter(Factor == "Factor1"), 
+            by = c("sender" = "ctype", "target" = "feature")) %>%
+  semi_join(df.lr %>% 
+              filter(Factor == "Factor1") %>% 
+              select(sender, receiver, group, source_genesymbol),
+            by = c("sender", "receiver", "group", "test_ligand" = "source_genesymbol"))%>%
+  saveRDS("output/communication/nn_target_weights_mcp1.rds")
 # calculate sums of interactions of LR pairs
 df.graph <- df.lr%>% 
   select( receiver, sender,everything())%>%
@@ -57,7 +82,7 @@ df.depend <- df.depend%>%
   select(-com_HF, -com_NF)%>%# remove old numbers
   mutate(lr_NF = ifelse(is.na(lr_NF),0, lr_NF))%>%
   mutate(lr_HF = ifelse(is.na(lr_HF),0, lr_HF))
-
+df.depend %>% saveRDS(., "output/communication/df_communications_mcp1_dependencies.rds")
 # plottiing of info net ---------------------------------------------------
 
 # main figure
@@ -142,7 +167,7 @@ dev.off()
 
 #save source data
 df.depend %>%
-  select(-NF, -lr_NF)%>%
+  select(-NF, -com_NF)%>%
   save_source_data(T, fig_number = 3, 
                    panel_letter = "F",
                    data = ., 
@@ -300,7 +325,7 @@ df.comm <- df.nn %>%
   mutate(group= toupper(group), 
          group= str_replace_all(group, "CT", "NF"))%>%
   select(-target, -weight, -expl_genes)%>%
-  rename(source_genesymbol = test_ligand) %>%
+  dplyr::rename(source_genesymbol = test_ligand) %>%
   left_join(df.lr %>% filter(Factor=="Factor1"))%>%
   group_by(source_genesymbol, sender,receiver, Factor, group)%>% 
   mutate(med.interact=median(interact, na.rm = T))%>%
@@ -330,6 +355,7 @@ x<- df.comm %>%
 
 df.comm<- df.comm %>% left_join(x)
 
+saveRDS(df.comm, "output/communication/df_communications_mcp1.rds")
 # save table for a collaborator
 
 df.comm%>%ungroup()%>%
@@ -460,6 +486,8 @@ p.fib.cm.targets<- plot_targets("Fib", "CM", y$df %>% ungroup()%>%
 
 p.fib.cm.targets
 
+
+
 ligs <- c("MXRA5", "NRG1", "BMP4", "LAMA4", "SLIT1", "SLIT2", "COL1A1")
 
 p.fib.cm.targets<- plot_targets(sender_oi = "Fib",receiver_oi = "CM", ligands_oi= ligs, 
@@ -470,6 +498,23 @@ pdf("output/figures/comm_nn_targets_cm_fib.pdf",
 p.fib.cm.targets
 dev.off()
 
+
+#save source data for fib- cm target gene heatmap
+f_c = df.nn%>% 
+  filter(receiver == "CM",
+         Factor=="Factor1",
+         sender=="Fib",
+         group =="hf", 
+         test_ligand %in% ligs)
+target.genes.oi <- g.loads%>% 
+  filter(Factor=="Factor1",
+         ctype == "CM",
+         (value) < 0.1)%>% 
+  pull(feature)
+f_c %>% 
+  filter(target %in% target.genes.oi)%>%
+  select(test_ligand, aupr_corrected, pearson, sender, receiver, weight, group)%>%
+  save_source_data(T, 3, "G", .)
 
 # revision update, address cell types targeting fibs -----------------------
 
