@@ -13,22 +13,16 @@
 
 library(tidyverse)
 library(cowplot)
-library(ggbeeswarm)
-
 theme_set(theme_cowplot())
-
-source("make_source_data.R")
 
 col_list<- readRDS("color_list_figures.rds")
 
 meta_data <- readRDS( "output/meta_data_for_plotting.rds")
-meta_data$demo = meta_data$demo  %>% 
-  mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
-  mutate(group= paste0(modality, "_", heart_failure))
+
 # etiologies --------------------------------------------------------------
 
 p.etio_summed<- meta_data$etiologies %>% 
-  #mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
+  mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
   filter(heart_failure %in% c("HF", "yes"))%>%
   group_by(disease_code, modality)%>%
   count()%>% 
@@ -48,17 +42,6 @@ p.etio_summed<- meta_data$etiologies %>%
   labs(x="", y="", fill ="HF\netiology")
 
 p.etio_summed
-
-##save soruce data
-meta_data$etiologies %>% 
-  filter(heart_failure %in% c("HF", "yes"))%>%
-  group_by(disease_code, modality)%>%
-  count()%>% 
-  group_by(modality)%>%
-  mutate(prop= n/sum(n)) %>% 
-  save_source_data(T, 
-                   1, "E", .)
-
 ggsave(p.etio_summed,
        device = "pdf", 
        filename = "output/figures/fig1_etio_summed.pdf",
@@ -78,8 +61,8 @@ p.etio_per_study<-meta_data$etiologies %>%
   theme_cowplot()+
   theme(axis.text.x= element_text(angle= 90, hjust= 1, vjust=0.5))+
   #guides(color = guide_legend(override.aes = list(size = 4)),)+
-  labs(x= "", y="", color="Heart failure")+
-  coord_flip()
+  labs(x= "", y="", color="Heart failure")
+  #coord_flip()
 
 ggsave(p.etio_per_study,
        device = "pdf", 
@@ -108,19 +91,13 @@ p.sex_summed<- meta_data$demo %>%
   labs(x="", y="Female patients", fill ="HF\netiology")
 p.sex_summed
 
-meta_data$demo %>% 
-  select(study, modality, heart_failure, proportion_female)%>%
-  save_source_data(T, 
-                 1, "D", .)
-
-
 p.sex_per_study<- meta_data$demo %>% 
   arrange(modality)%>%
   mutate(study= factor(study, levels= rev(sort(unique(meta_data$demo$study)))))%>%
   #mutate(study= factor(study, levels= c( y,x)))%>%
   ggplot(aes(y=study,  x= proportion_female, fill = heart_failure))+
   geom_col(position = "dodge", width = 0.7, color="black")+
-  coord_flip()+
+  #coord_flip()+
   geom_hline(yintercept = 50)+
   theme_cowplot()+
   scale_fill_manual(values= c("black", "grey"))+
@@ -133,6 +110,8 @@ p.sex_per_study
 
 p.age_box<- 
   meta_data$demo %>% 
+  mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
+  mutate(group= paste0(modality, "_", heart_failure))%>%
   ggplot(aes(x=group, y= age_mean))+
   geom_boxplot(aes( fill =heart_failure), show.legend = F, outlier.color = NA)+
   geom_jitter(width=0.1)+
@@ -141,12 +120,6 @@ p.age_box<-
   labs(x="", y="Age (y)\nstudy mean", fill ="HF\netiology")
 
 p.age_box
-
-meta_data$demo %>% 
-  select(study, heart_failure, modality, age_mean)%>%
-  save_source_data(T, 
-                   1, "C", .)
-
 
 p.age<- meta_data$demo%>%
   mutate(label= ifelse(heart_failure=="NF","",study ))%>%
@@ -176,31 +149,6 @@ p.age<- meta_data$demo%>%
   theme(panel.background = element_rect(fill="lavender"))
 p.age
 
-p.age<- dfcomb%>%
-  mutate(label= ifelse(heart_failure=="NF","",study ))%>%
-  ggplot(aes(x=year, y=age_mean,  color=heart_failure))+
-  geom_hline(yintercept = mean(dfcomb%>% filter(heart_failure=="HF")%>% pull(age_mean), na.rm = T),
-             linetype=3,linewidth=0.8, color="black")+
-  geom_hline(yintercept = mean(dfcomb%>% filter(heart_failure!="HF")%>% pull(age_mean), na.rm = T), 
-             linetype=3, linewidth=0.8, color="darkgreen")+
-  geom_errorbar(aes(ymin=age_mean-age_sd, ymax=age_mean+age_sd),alpha= .4, 
-               linetype=1,
-              linewidth=.4)+
-  ggrepel::geom_label_repel(aes(label=label, fill= modality),color="white",
-                            max.overlaps = 2000,
-                            show.legend = T, 
-                            alpha= 0.8  )+
-  geom_smooth(formula = y~x, na.rm = T, alpha= 0.2, se= F)+
-  scale_color_manual(values= c("#E83151", "#757780"))+
-  scale_fill_manual(values= c("darkblue", "black"))+
-  geom_point()+
-  theme_cowplot()+
-  ylim(c(25,80))+
-  xlim(c(2005,2023))+
-  labs(y="Age\n(study mean ± sd)", x="Year",  fill="Modality",color= "Cohort")+
-  theme(panel.background = element_rect(fill="lavender"))
-p.age
-
 p.age<- meta_data$demo%>%
   mutate(label= ifelse(heart_failure=="NF","",study ))%>%
   ggplot(aes(x=heart_failure, y=age_mean,  fill=heart_failure))+
@@ -227,7 +175,8 @@ p.age<- meta_data$demo%>%
   theme(panel.background = element_rect(fill="white"),
         axis.text.x= element_blank(),
         axis.ticks.x= element_blank(), 
-        strip.text = element_text(size= 7))
+        strip.text = element_text(size= 6))+
+  theme(strip.clip = "off")
   #coord_flip()
 p.age
 # NA matrix ---------------------------------------------------------------
@@ -238,59 +187,50 @@ p.age
 # sample_location and accquisition---------------------------------------------------------
 
 df_location_sum<-meta_data$location%>%
-  group_by(modality, sample_site, heart_failure)%>% 
-  summarise(n= sum(n))
+  group_by(modality, sample_site, heart_failure)%>% summarise(n= sum(n))
 
-df_locatio_sum_hf = df_location_sum%>% 
+p_biopsy_location_summed<- meta_data$location %>% 
+  mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
   mutate(sample_site= str_replace_all(sample_site, "LV_", ""))%>%
   filter(heart_failure %in% c("HF", "yes"))%>%
+  group_by(sample_site, modality)%>%
+  count()%>% 
   group_by(modality)%>%
-  mutate(prop= n/sum(n))
-
-p_biopsy_location_summed= df_locatio_sum_hf%>%
-ggplot(aes(x= modality,y= prop, fill = sample_site))+
-    geom_col(position = "fill", color= "black")+
-    # geom_text(aes(label =scales::percent(prop, accuracy = 0.1)), 
-    #           position = position_stack(vjust = 0.5), # Center the labels within the bars
-    #           color = "black")+
-    #scale_fill_manual(values= c("#428af5","#e08816", "grey"))+
-    scale_fill_manual(values=unname(col_list$etiologies_colors[-1]))+
-    theme_cowplot()+
-    scale_y_continuous(labels = scales::percent)+
-    theme(axis.text.x = element_text(angle= 90, hjust= 1, vjust= 0.5), 
-          axis.line = element_blank(), 
-          axis.ticks.x = element_blank())+
-    #theme(axis.text.x = element_text(angle= 90, hjust= 1))+
-    labs(x= "", y= "", fill = "LV biopsy\nlocation")
-
-
+  mutate(prop= n/sum(n))%>%
+  ggplot(aes(x= modality,y= prop, fill = sample_site))+
+  geom_col(position = "fill", color= "black")+
+  # geom_text(aes(label =scales::percent(prop, accuracy = 0.1)), 
+  #           position = position_stack(vjust = 0.5), # Center the labels within the bars
+  #           color = "black")+
+  #scale_fill_manual(values= c("#428af5","#e08816", "grey"))+
+  scale_fill_manual(values=unname(col_list$etiologies_colors[-1]))+
+  theme_cowplot()+
+  scale_y_continuous(labels = scales::percent)+
+  theme(axis.text.x = element_text(angle= 90, hjust= 1, vjust= 0.5), 
+        axis.line = element_blank(), 
+        axis.ticks.x = element_blank())+
+  #theme(axis.text.x = element_text(angle= 90, hjust= 1))+
+  labs(x= "", y= "", fill = "LV biopsy\nlocation")
 p_biopsy_location_summed
 
-#save source
-df_locatio_sum_hf%>%
-  save_source_data(T, 
-                   1, "F", .)
-  
 
-# # get proportions of sample loc 
-# # and sample acc
-# rbind(bulk_sample_acc_df, sc_sample_acc_df)%>%
-#   filter(heart_failure=="HF")%>%
-#   group_by(modality, sample_accquisition)%>%
-#   summarise(n2= sum(n, na.rm = T))%>%
-#   mutate(prop= n2/sum(n2))
-# filter(!is.na(n2))
-# rbind(bulk_sample_acc_df, sc_sample_acc_df)%>%
-#   filter(heart_failure=="HF")%>%
-#   group_by( sample_accquisition)%>%
-#   summarise(n2= sum(n, na.rm = T))%>%
-#   mutate(prop= n2/sum(n2))
-# filter(!is.na(n2))
-# 
+# get proportions of sample loc 
+# and sample acc
+rbind(bulk_sample_acc_df, sc_sample_acc_df)%>%
+  filter(heart_failure=="HF")%>%
+  group_by(modality, sample_accquisition)%>%
+  summarise(n2= sum(n, na.rm = T))%>%
+  mutate(prop= n2/sum(n2))
+filter(!is.na(n2))
+rbind(bulk_sample_acc_df, sc_sample_acc_df)%>%
+  filter(heart_failure=="HF")%>%
+  group_by( sample_accquisition)%>%
+  summarise(n2= sum(n, na.rm = T))%>%
+  mutate(prop= n2/sum(n2))
+filter(!is.na(n2))
 
-## this was plotting the location as a circular plot, was not used in the end
-df_location = df_location_sum
-df_location_sum %>%
+
+df_location %>%
   filter(heart_failure=="HF")%>%
   group_by(modality, sample_site)%>%
   summarise(n2= sum(n, na.rm = T))%>%
@@ -407,17 +347,13 @@ sc.p
 
 # accquisition ---------------------------------------------------------------------
 
-df_acc_sum<-meta_data$accquisition%>%
-  ungroup()%>%
-  group_by(modality, sample_accquisition, heart_failure)%>% 
-  summarise(n= sum(n))
-
-df_acc_sum_hf = df_acc_sum%>% 
+p.sample_acc_summed<- meta_data$accquisition%>%
+  mutate(modality= ifelse(modality=="sc", "Single Nuc","Bulk"))%>%
   filter(heart_failure %in% c("HF", "yes"))%>%
+  group_by(sample_accquisition, modality)%>%
+  count()%>% 
   group_by(modality)%>%
-  mutate(prop= n/sum(n))
-
-p.sample_acc_summed<- df_acc_sum_hf%>%
+  mutate(prop= n/sum(n))%>%
   ggplot(aes(x= modality,y= prop, fill = sample_accquisition))+
   geom_col(position = "fill", color= "black")+
   # geom_label(aes(label =scales::percent(prop, accuracy = 1)), 
@@ -436,10 +372,6 @@ p.sample_acc_summed<- df_acc_sum_hf%>%
   labs(x= "", y= "", fill = "Reason for\nHF biopsy")
 p.sample_acc_summed
 
-df_acc_sum_hf %>%
-  save_source_data(T, 
-                   1, "G", .)
-
 p.sample_acc_study<- 
   meta_data$accquisition%>%
   mutate(study= factor(study, levels= rev(sort(unique(meta_data$etiologiess$study)))))%>%
@@ -448,7 +380,7 @@ p.sample_acc_study<-
   scale_color_manual(values= c("black", "grey"))+
   facet_grid(~sample_accquisition)+
   theme_cowplot()+
-  coord_flip()+
+  #coord_flip()+
   theme(axis.text.x = element_text(angle= 90, hjust= 1,vjust= 0.5))+
   guides(color = guide_legend(override.aes = list(size = 4)),
   )+
@@ -467,7 +399,6 @@ dev.off()
 
 
 # genetic -----------------------------------------------------------------
-
 
 p.genetic_summed<- meta_data$target_sc%>%
   #distinct(genetic_HF, study)%>%
@@ -494,14 +425,6 @@ p.genetic_summed<- meta_data$target_sc%>%
   scale_fill_manual(values =unname(col_list$etiologies_colors)[2:3])
 p.genetic_summed
 
-meta_data$target_sc%>%
-  #distinct(genetic_HF, study)%>%
-  filter(heart_failure=="HF")%>%
-  group_by(genetic_HF, study)%>%count()%>%
-  group_by(study)%>%
-  mutate(prop=  n / sum(n))%>%
-  save_source_data(T, 1, "H", .)
-
 p.genetic_per_study<- meta_data$target_sc%>%
   filter(genetic_HF == "yes")%>%
   #distinct(genetic_HF, study)%>%
@@ -521,7 +444,24 @@ p.genetic_per_study<- meta_data$target_sc%>%
   labs(x="", y="", fill ="pathogenic variant")
 p.genetic_per_study
 
-
+p.race<- meta_data$target_sc%>%
+  #filter(genetic_HF == "yes")%>%
+  #distinct(genetic_HF, study)%>%
+  group_by(race, study)%>%count()%>%
+  group_by(study)%>%
+  mutate(prop=  n / sum(n))%>%
+  ggplot(aes(x= study, y = prop, fill = race))+
+  geom_col(color="white")+
+  geom_text(aes(label =race), 
+            position = position_stack(vjust = 0.5), # Center the labels within the bars
+            color = "black")+
+  scale_y_continuous(labels = scales::percent)+
+  theme(axis.line = element_blank(), 
+        axis.ticks.x = element_blank(), 
+        axis.text.x= element_text(angle= 90, hjust= 1), 
+        legend.position = "none")+
+  labs(x="", y="", fill ="pathogenic variant")
+p.race
 # lvef, bmi and race ------------------------------------------------------
 p.lvef<- meta_data$target_sc %>%
   ggplot(aes(x = study, y = LVEF, fill = heart_failure)) +
@@ -542,9 +482,9 @@ p.lvef<- meta_data$target_sc %>%
         axis.ticks.x = element_blank(), 
         axis.text.x= element_text(angle= 90, hjust= 1, vjust= 0.5))
 p.lvef
-
-
-
+# Load necessary libraries
+library(ggplot2)
+library(ggbeeswarm)
 p.bmi<- meta_data$target_sc %>%
     ggplot(aes(x = study, y = BMI, fill = heart_failure)) +
     geom_quasirandom(
@@ -562,13 +502,7 @@ p.bmi<- meta_data$target_sc %>%
   theme(#axis.line = element_blank(), 
     axis.ticks.x = element_blank(), 
     axis.text.x= element_text(angle= 90, hjust= 1, vjust= 0.5))
-p.bmi 
-#save source
-
-meta_data$target_sc %>%
-  distinct(study, sample_id, heart_failure, BMI,  LVEF)%>%
-  save_source_data(T, 1, "I", .)
-
+p.bmi  
 # sample size  ------------------------------------------------------------
 
 p.sample_size<- meta_data$sample_size %>%
@@ -595,14 +529,6 @@ p.sample_size<- meta_data$sample_size %>%
 
  
 p.sample_size
-#save source
-meta_data$sample_size %>%
-  mutate(new = ifelse(new == "y", "2024", "2021"),
-         modality = ifelse(modality=="bulk", "Bulk", "Sn"),
-         label = ifelse(new == "2024" & heart_failure == "HF", "*", ""))  %>%
-  select(-age_mean, -age_sd, -lvef_mean, -lvef_sd)%>%
-  save_source_data(T, 1, "B", .)
-
 # combine -----------------------------------------------------------------
 
 ## main figure
@@ -644,17 +570,33 @@ p.sample_acc_study
 p.genetic_per_study
 p.age
 p.sex_per_study
-p.etiogen<- plot_grid(p.etio_per_study, p.genetic_per_study,ncol = 2, rel_widths = c(1,0.35))
+p.etiogen<- plot_grid(p.age+
+                        theme(legend.position = "none"),
+                      p.sex_per_study+
+                        theme(axis.text.y= element_text(size= 8)),
+                      ncol = 2, rel_widths = c(1,0.5),
+                      labels = c("A", "B"))
 p.supp<- plot_grid(ncol =1,
-          align ="hv",
-  p.age,
-  p.sex_per_study,
-  p.etiogen,
-  p.sample_acc_study,
-  rel_heights = c(1,0.7, 0.8)
+          #align ="hv",
+          plot_grid(p.age+
+                      theme(legend.position = "none"),
+                    p.sex_per_study+
+                      theme(axis.text.y= element_text(size= 8)),
+                    ncol = 2, rel_widths = c(1,0.5),
+                    labels = c("A", "B")),
+  plot_grid(p.etio_per_study,
+            p.sample_acc_study, ncol= 2, 
+            rel_widths= c(0.7,1),
+            labels = c("C", "D")),
+  plot_grid(  p.genetic_per_study,  p.race,
+              ncol=2,
+              labels = c("E", "F")),
+  rel_heights = c(1,1, 0.7),
+  rel_widths = c(1,0.7)
 )
-p.etiogen
-pdf("output/figures/meta_data_presentation/meta_composite_supp.pdf", 
+p.supp
+
+pdf("output/figures/meta_data_presentation/meta_composite_supp2.pdf", 
     width= 10, height= 15)
 p.supp
 dev.off()
@@ -681,4 +623,3 @@ meta_data$target_sc %>%
   count(race)%>% 
   ungroup()%>% 
   mutate(prop= n/sum(n))
-
